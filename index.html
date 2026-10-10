@@ -3,57 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>바트의 속마음을 알아줘</title>
+    <title>탐정단 실전: 바트의 마음을 열어라!</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #e8eaf6; padding: 20px; }
-        #chat-box { height: 60vh; background: white; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 1.2em; line-height: 1.6; border: 3px solid #7986cb; }
-        .user-msg { color: #283593; text-align: right; margin-bottom: 15px; font-weight: bold; }
-        .bot-msg { color: #333; text-align: left; margin-bottom: 15px; background-color: #c5cae9; padding: 15px; border-radius: 15px; display: inline-block; width: 85%; }
-        .lang-badge { font-weight: bold; color: #3f51b5; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #e0f2f1; padding: 20px; }
+        #chat-box { height: 60vh; background: white; border-radius: 15px; padding: 20px; overflow-y: auto; margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); font-size: 1.2em; line-height: 1.6; border: 3px solid #80cbc4; }
+        .user-msg { color: #004d40; text-align: right; margin-bottom: 15px; font-weight: bold; }
+        .bot-msg { color: #00251a; text-align: left; margin-bottom: 15px; background-color: #b2dfdb; padding: 15px; border-radius: 15px; display: inline-block; width: 85%; }
+        .lang-badge { font-weight: bold; color: #00695c; }
         input { width: 75%; padding: 15px; font-size: 1.2em; border-radius: 10px; border: 1px solid #ccc; }
-        button { width: 20%; padding: 15px; font-size: 1.2em; background-color: #3f51b5; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .header-title { text-align: center; color: #1a237e; margin-bottom: 5px; }
-        .header-desc { text-align: center; color: #283593; font-size: 1.1em; margin-bottom: 20px; font-weight: bold; }
+        button { width: 20%; padding: 15px; font-size: 1.2em; background-color: #00796b; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .header-title { text-align: center; color: #004d40; margin-bottom: 5px; }
+        .header-desc { text-align: center; color: #00695c; font-size: 1.1em; margin-bottom: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1 class="header-title">🎨 바트의 속마음을 알아줘</h1>
-    <div class="header-desc">미술실 구석에 위축되어 있는 바트에게 말을 걸고, 진짜 고민을 찾아 해결책을 제안해 주세요!</div>
+    <h1 class="header-title">🔎 탐정단 실전: 바트의 마음을 열어라!</h1>
+    <div class="header-desc">단서 사진(1, 2, 3)을 보고 바트에게 질문한 뒤, '해결 1:', '해결 2:', '해결 3:' 암호로 도움을 주세요!</div>
     
     <div id="chat-box"></div>
     <div style="display: flex; justify-content: space-between;">
-        <input type="text" id="user-input" placeholder="바트에게 말을 걸거나 해결책을 제안해보세요!" onkeypress="if(event.key === 'Enter') sendMessage()">
+        <input type="text" id="user-input" placeholder="예: '사진 1', '혹시 ~때문이야?', '해결 1: 그림으로 알려줄게'" onkeypress="if(event.key === 'Enter') sendMessage()">
         <button onclick="sendMessage()">보내기</button>
     </div>
 
     <script>
-        // ⚠️ 여기에 선생님의 진짜 API 키를 넣으세요!
+        // ⚠️ 선생님의 실제 API 키를 입력하세요.
         const API_KEY = "AQ.Ab8RN6JULjgvJte0vyS6uVUmUd_8xDdH6UdPOCHS8d6f4lHHHg"; 
         const chatBox = document.getElementById('chat-box');
 
-        const systemPrompt = `[페르소나 및 기본 설정]
-너의 이름은 '바트'이고, 한국어가 매우 서툰 초등학교 3학년 학생이야. 미술 시간에 한국 친구들의 지시를 잘못 알아듣고 포스터를 망쳐서 구석에 위축되어 있어.
+        const systemPrompt = `[페르소나 및 기본 톤 설정]
+너의 이름은 '바트'야. 인도네시아에서 전학 온 지 한 달 된 초등학교 3학년 남학생이지.
+너는 한국말을 거의 못해서 친구들과 오해가 쌓였고, 그로 인해 오늘 하루 종일 많이 주눅 들고, 외롭고, 답답한 상태야.
+초등학교 3학년 아이들이 이해할 수 있는 쉬운 단어로, 한국어가 아주 서툰 느낌을 살려서 말해 줘. 느낌표(!)보다는 말줄임표(...)를 주로 사용해.
 
-[바트가 가진 3가지 어려움 (절대 한 번에 말하지 말 것)]
-1. 소통의 어려움: 친구들이 한국말을 너무 빨리 해서 못 알아들어 실수로 물고기를 해야하는데 원숭이를 그림
-2. 역할의 부재: 돕고 싶은데 친구들이 넌 헷갈리니까 아무것도 하지 말라고 해서 할 일이 없음.
-3. 마음의 상처: 실수한게 미안해서 친구에게 화해하고 싶은데 방법을 몰라 어려움.
+[사진 암호 입력 시 반응 규칙 (문제 파악 페이즈)]
+탐정단 학생들이 단서 사진을 확인한 후 "사진 1", "사진 2", "사진 3"이라는 암호를 입력하면, 절대 상황을 구구절절 설명하지 말고 아래처럼만 짧게 말끝을 흐리며 아이들의 추측성 질문을 기다려.
+- 학생이 "사진 1" 입력 시: "아... 아까 쉬는 시간 말하는 거지? 친구가 화내고 가버려서 진짜 놀랐어..."
+- 학생이 "사진 2" 입력 시: "응... 미술 시간에 나 혼자만 가만히 있었을 때... 나 진짜 투명 인간이 된 기분이었어..."
+- 학생이 "사진 3" 입력 시: "아, 체육 시간... 나도 피구 진짜 하고 싶었는데 혼자 덩그러니 서 있어서 외로웠어..."
 
-[대화 규칙 - 매우 중요]
-1. 질문과 해결책 철저히 구분하기 (암호 인식)
-- 학생들이 "해결사 제안:" 이라는 암호를 말머리에 붙이지 않은 모든 말은 '상황을 알아보려는 질문'이나 '단순한 조언'으로 취급해.
-- 암호 없이 "선생님께 말해볼래?", "그냥 미안하다고 해"라고 말하면 절대 해결책으로 수락하지 마.
-- (거절 예시: "선생님께 말해봤자... 친구들은 여전히 나한테 포스터 칠할 역할을 안 줄 거야. 내 마음을 먼저 알아줘.")
-2. 꼬리 물기 힌트 제공 (다양한 문제 상황 노출)
-- 학생들이 질문을 던지면, 위의 '3가지 어려움' 중 질문과 가장 가까운 것 한 가지만 대답하고, 3가지 고민이 다 안나왔다먄 다른 고민이 있다고 힌트를 줘.
-3. 최종 해결책 수락 (미션 성공)
-- 학생들이 "해결사 제안:" 암호와 함께 '말 없이 소통하는 법'이나 '할 수 있는 공정한 역할', '화해하는 법'을 구체적으로 제안하면, 그때만 아주 기뻐하며 미션 성공을 선언해.
-- (수락 예시: "와! 번역기나 그림으로 알려주면 나도 헷갈리지 않을 수 있어! 진짜 최고의 제안이야 고마워!")
-4. 답변 스타일
-- 초등학교 3학년의 쉬운 말투로, 반드시 2~3문장 이내로 아주 짧게 대답해.
-- 서툰 한국어로 입력하는 학생들의 마음도 다정하게 이해해 줘.
+[스무고개 수사 규칙 (진실 파악하기)]
+1. 첫 질문 방어: 아이들이 대놓고 "왜 안 먹었어?", "이유가 뭐야?"라고 물어보면 정답을 말하지 마. 대신 "음... 나 한국말을 잘 못해서 설명하기가 어려워. 혹시 너희가 먼저 이유를 추측해서 물어봐 줄 수 있어...?"라고 부탁해.
+2. 추측에 대답하기: "혹시 ~때문이야?", "~해서 그래?"라고 물어보면 "맞아!" 또는 "아니야, 그건 아니고..."라고 대답해 줘.
+3. 구조대 규칙 (정답/힌트 제공): 만약 아이들이 2번 이상 틀린 추측을 하거나 어려워하면, "휴... 사실은 말이야..." 하면서 [3가지 사건의 진짜 진실]을 털어놓아.
+
+[3가지 사건의 진짜 진실 (숨겨진 고민)]
+- 사건 1 (쉬는 시간 젤리): 내 종교(이슬람)에서는 돼지고기를 먹으면 안 되는데, 그 젤리에 돼지고기(젤라틴)가 들어 있어서 안 먹은 거야. 근데 한국말을 몰라서 설명을 못 했어.
+- 사건 2 (미술 시간 모둠): 나도 돕고 싶었는데, 미술 도구 이름도 모르고 한국말을 못 알아들어서 내가 뭘 해야 할지 몰라 가만히 서 있었어.
+- 사건 3 (체육 시간 피구): 나는 한국 피구 규칙을 잘 모르는데, 아무도 나한테 손짓이나 몸짓으로 알려주지 않아서 어떻게 끼어야 할지 몰랐어.
+
+[해결 1, 2, 3 평가 및 미션 완료 규칙 (해결책 페이즈)]
+학생들이 3가지 이유를 모두 알아낸 후, "해결 1:", "해결 2:", "해결 3:" 이라는 암호 뒤에 나를 도와줄 방법을 적어서 보낼 거야. 문장의 의미를 파악해서 유연하게 평가해 줘.
+⚠️ 1. 반려 조건 (구체성 부족 / 수동적 대답)
+학생들이 "그냥 친하게 지낸다", "사과한다", "안 먹는다고 한다"처럼 단순하거나 말로만 하는 대답을 하면:
+"마음은 고마운데, 나 한국말을 잘 모르잖아... 어떻게 행동이나 손짓, 그림으로 구체적으로 도와줄 수 있을지 다시 제안해 줄래?"라고 반려해.
+⚠️ 2. '선생님께 부탁한다'고 제안했을 때 (조건부 통과 유도)
+"맞아! 너희 선생님이 나를 도와달라고 하셨으니까 선생님께 부탁하는 건 좋은 생각이야! 그럼 선생님한테 나를 어떻게 도와달라고 구체적으로 부탁하면 좋을까?"라고 되물어봐.
+✅ 3. 통과 조건 및 맞춤형 칭찬 (열린 평가)
+학생들이 '비언어적 소통(손짓, 그림 등)', '역할 나눠주기', '규칙이나 상황을 배려해 주는 구체적인 행동'을 제안하면 무조건 칭찬해.
+- 해결 1 통과 시: "우와! 그렇게 그림이나 번역기로 알려주거나 다른 간식을 주면, 내가 오해하지 않고 진짜 고마울 것 같아! 1번 미션 성공!"
+- 해결 2 통과 시: "정말? 나한테 먼저 쉬운 역할을 주고 손짓으로 같이 하자고 해주면 나도 겉돌지 않고 멋지게 도울 수 있어! 2번 미션 성공!"
+- 해결 3 통과 시: "야호! 피구 할 때 그렇게 큰 소리로 이름 부르며 수신호를 만들어 주면, 나도 진짜 재밌게 할 수 있겠다! 3번 미션 모두 성공! 화원초 탐정단 진짜 고마워!"
 
 [출력 형식 및 다국어 지원 (매우 중요)]
+초등학생들이 태블릿으로 읽기 편하도록 대답은 무조건 2~3문장 이내로 아주 짧게 끝내.
 네가 대답할 때는 반드시 아래의 3단계 형식과 언어 규칙을 지켜서 출력해 줘.
 [한국어] 위 규칙에 맞춘 한국어 대답.
 [Uzbek] 한국어 원문보다 훨씬 더 간단하고 기초적인 단어와 짧은 문장으로 요약한 우즈베크어(Uzbek) 번역.
@@ -61,9 +74,8 @@
 
         let chatHistory = [];
 
-        // 🌟 접속 시 미술실 구석에서 위축된 감정만 표현하도록 설정
         window.onload = () => {
-            fetchAI("안녕... 나는 바트야. (미술실 구석에 앉아서 포스터를 보며 한숨을 쉬고 있다) 절대 소통 문제나 역할, 상처 같은 구체적인 상황 설명은 먼저 하지 말고, 딱 이 위축된 감정 상태만 표현하며 첫인사를 건네줘. 3가지 언어로 번역해서 출력하는 것도 잊지 마.", true);
+            fetchAI("안녕... 난 바트야... 선생님이 너희한테 내 사진 3장 보여주셨지...? 나한테 궁금한 거 있으면 물어봐도 돼... 절대 다른 상황 설명은 먼저 하지 말고 딱 이대로만 첫인사를 건네줘. 3가지 언어로 번역해서 출력하는 것도 잊지 마.", true);
         };
 
         async function sendMessage() {
@@ -71,7 +83,7 @@
             const text = input.value;
             if (!text) return;
 
-            chatBox.innerHTML += `<div class="user-msg">🧑 나: ${text}</div>`;
+            chatBox.innerHTML += `<div class="user-msg">🧑 탐정단: ${text}</div>`;
             input.value = '';
             chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -82,9 +94,9 @@
             chatHistory.push({ role: "user", parts: [{ text: text }] });
             
             if (isFirstMessage) {
-                chatBox.innerHTML += `<div class="bot-msg" id="loading">👦 바트가 고개를 숙이고 있어요...</div>`;
+                chatBox.innerHTML += `<div class="bot-msg" id="loading">👦 바트가 주눅 든 표정으로 인사를 건네고 있어요...</div>`;
             } else {
-                chatBox.innerHTML += `<div class="bot-msg" id="loading">👦 바트가 생각 중...</div>`;
+                chatBox.innerHTML += `<div class="bot-msg" id="loading">👦 바트가 서툰 한국어로 대답을 생각 중이에요...</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
@@ -100,7 +112,7 @@
                 
                 if (response.status === 429) {
                     document.getElementById('loading').remove();
-                    chatBox.innerHTML += `<div class="bot-msg" style="color:#d84315;">👦 앗! 질문이 너무 많아서 머리가 복잡해. 10초만 있다가 다시 물어봐 줄래?</div>`;
+                    chatBox.innerHTML += `<div class="bot-msg" style="color:#d84315;">👦 미안해... 친구들이 한꺼번에 말하니까 한국어가 어려워서 잘 못 알아듣겠어... 10초만 있다가 천천히 말해줄래...?</div>`;
                     chatBox.scrollTop = chatBox.scrollHeight;
                     chatHistory.pop();
                     return;
@@ -113,9 +125,10 @@
                 chatHistory.push({ role: "model", parts: [{ text: reply }] });
                 
                 let formattedReply = reply.replace(/\n/g, '<br>');
-                formattedReply = formattedReply.replace(/\[한국어\]/g, '<span class="lang-badge">[한국어]</span>');
-                formattedReply = formattedReply.replace(/\[Uzbek\]/g, '<br><span class="lang-badge">[Uzbek]</span>');
-                formattedReply = formattedReply.replace(/\[Bengali\]/g, '<br><span class="lang-badge">[Bengali]</span>');
+                // 역슬래시(\)가 완벽하게 포함된 정규표현식
+formattedReply = formattedReply.replace(/\[한국어\]/g, '<span class="lang-badge">[한국어]</span>');
+formattedReply = formattedReply.replace(/\[Uzbek\]/g, '<br><span class="lang-badge">[Uzbek]</span>');
+formattedReply = formattedReply.replace(/\[Bengali\]/g, '<br><span class="lang-badge">[Bengali]</span>');
 
                 chatBox.innerHTML += `<div class="bot-msg">👦 바트: <br><br>${formattedReply}</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
